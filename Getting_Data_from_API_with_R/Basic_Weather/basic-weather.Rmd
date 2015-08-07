@@ -1,0 +1,276 @@
+---
+title: "Getting the Data from API with R - Basic Weather"
+author: "Yizhe Xu"
+date: "August 6, 2015"
+output: html_document
+Organization: aWhere
+Version: 1.0
+---
+
+# Introduction 
+This lesson is about accessing aWhere API to download 2 weeks worth of weather data for any given location and any given start date. 
+
+Retrieving data from the API has 4 steps. First, is to get API authorization. aWhere uses OAuth 2.0 tokens to regulate access to the API. You should be provided with a Key and Secret. 
+(with which you will generate an Access Token to be included on each API request) 
+The second step is to set up API querying string. The string is the url behind the GET function in Postman. 
+
+The third step is to send the query string through a GET command to the api. 
+
+The last step is to format the data and export it into a format you would like to use. 
+
+Which of the following statement is wrong?
+
+* 1. If I don't know my API credentials then I cannot get data from the API; 
+* 2. To query the data, I need to build a query string first; 
+* 3. **After sending a query string, I can directly use the weather data;**
+* 4. After sending a query string, the data need to be formated and exported into a format of my choice for me to use. 
+
+
+Do you know your API Key and Secret to access the api?
+
+* 1. **Yes**;
+* 2. No
+
+# Step 1 Get API Authorization
+
+Now we want to tell R the API key and Secret, so that R can use it later to retrieve data from the API. R stores data (value) in different variables. We need to assign the API key and API credential to two different variables: ```api_key```, and ```api_secret```.
+
+The way you assign a value to a variable in R is by using the assignment operator, which is just a "less than" symbol followed by a "minus" sign. It looks like this: ```<-``` 
+
+You can assign anything to a variable. Such as a result of a calculation (```x <- 1 + 1```), a number (```x <- 100```, ```x <- pi```), a character (```x <- "great"```), a logical value (```x <- TRUE```). In R, these objects together are called Atomic Vectors. Except for Atomic Vectors, R also has Matrix, List, Data frame, and Array. 
+
+An API key is a character vector. To assign this to variable ```api_key```, you just need to type API key in quotes and assign it to ```api_key``` using ```<-```. Now, assign API key to api_key. 
+
+```{r, eval = TRUE, echo = FALSE}
+library(httr)
+library(jsonlite)
+```
+
+```{r, include = TRUE}
+api_key <- "yizhexu@awhere.com"
+```
+Hint: Enter api_key <- "Your API Key"
+
+Check out the API key you assigned to ```api_key``` by entering ```api_key```.
+```{r, include = TRUE}
+api_key
+```
+Hint: Just type api_key
+
+Now assign the API secret to api_secret. 
+```{r, eval = FALSE, echo = TRUE}
+api_secret <- "********"
+```
+
+```{r, eval = TRUE, echo = FALSE}
+api_secret <- "181225tiancai@X"
+```
+Hint: Enter api_secret <- "Your API Secret"
+
+# Step 2. Setting Up Query Strings
+
+After setting up API authentication, now you can prepare a query string to retrieve data from the API. 
+
+According to aWhere Weather Kit API Documentation, there are 3 required request parameters: the latitude, longitude, and a startDate. This set of parameters will give you 14 days worth of data (14 historical days or at most 8 days forecasting). The data will have 3 weather variables: max temperature, min temperature, precipitation. 
+  
+Which of the following statement about basic weather query is wrong?
+
+* 1. Basic weather query require location and start date as input parameters; 
+* 2. If using current date as start date to do basic weather query, I will get 14 days worth of data but only 8 days will have actual data; 
+* 3. **Through basic weather query you can get data for any weather variables; **
+* 4. Basic weather query only allows one location and one start date per query. 
+
+Hint: Basic weather query can get max temperature, min temperature, and precipitation data from one location with 14 days worth of historical data or 8 days worth of forecasting data. 
+  
+The first is the latitude. In this exercise, we will be querying weather information for Julius Nyerere International Airport in Dar es Salaam.  
+
+Similarly, we also need to assign the value of latitude and longitude to two different variables. The latitude is a number (numeric vector). Different from your API key and secret, you don't need to put it in quote. Now assign the latitude of Julius Nyerere International Airport to variable latitude. The latitude and longitude of the airport is -6.872, 39.206.
+```{r, include=TRUE}
+latitude <- -6.872
+```
+
+Hint: "Assign the latitude value: -6.872 to a variable called latitude. Type in latitude <- -6.872"
+  
+Now assign the value of longitude to a variable named longitude. 
+```{r, include=TRUE}
+longitude <- 39.206
+```
+
+Hint: "Assign the longitude value: -6.872 to a variable called longitude. Type in longitude <- 39.206"
+
+What is the third parameter we need to pass to basic weather query?
+
+* 1. **startDate**; 
+* 2. endDate; 
+* 3. plantDate; 
+* 4. Date
+
+Hint: "The name of parameters spelled in the query must be exactly as they are listed on the aWhere Weather Kit API Documentation. The parameters are: latitude, longitude, and startDate"
+  
+Start date must be pass to the API in the format as "YYYY-MM-DD". Now assign the value of start date to a variable named startDate. Just assume the start date is the date of Farmers' Day, "2015-08-08". 
+
+```{r, include = TRUE}
+startDate <- "2015-08-08"
+
+```
+
+Hint: "Assign the start date value: '2015-08-08' to a variable called startDate. Type in startDate <- '2015-08-08'"
+
+Now we need to create a query string using all the parameters we have identified. The query string will look like 'latitude=-6.872&longitude=39.206&startDate=2015-08-08'. We will be using paste0 function from R to create an object named strquery. You can type in ?paste to look at the help file
+
+```{r, include = T}
+?paste
+
+```
+Hint: Type ?paste to view its help file.
+
+Based on the help file, if we want to create a string that looks like 'latitude=-6.872', we just just need to paste latitude and -6.872 together, seperated by '='. 
+
+```{r, include = TRUE}
+paste("latitude", -6.872, sep = "=")
+```
+
+Hint: Type paste("latitude", -6.872, sep = "=") to get the string
+  
+To create a string looks like latitude=-6.872&longitude=39.206, we will need to collapse latitude=-6.872 and longitude=39.206 with a & symbol. You can use c("latitude", "longitude") to realize collapse function. 
+
+```{r, include = TRUE}
+paste(c("latitude", "longitude"), c(-6.872, 39.206), sep = "=", collapse = "&")
+```
+
+Hint: Type paste(c("latitude", "longitude"), c(-6.872, 39.206), sep = "=", collapse = "&") to get the string
+
+Now create a string with all three parameters and assign it to strquery. 
+```{r, include = TRUE}
+strquery <- paste(c("latitude", "longitude", "startDate"), c(-6.872, 39.206, "2015-08-08"), sep = "=", collapse = "&")
+```
+
+Hint: Adding 'startDate' and the value '2015-08-08' to the paste command and assign it to strquery. 
+
+Check out the basic weather query string you created and assigned to strquery
+```{r, include = TRUE}
+strquery
+```
+
+Hint: Just type strquery
+
+# Step 3. Send a GET request
+Now the third step to retrieve data from weather api is to send a GET requeset. We would rely on a package called 'httr' to do this. 'httr' is designed to provide R functionality to work with modern web APIs. To leverage this package, we will have to install it and load it to the environment. 
+
+We have already discussed how to install a package in the previous session. Can you point out which of the following command is wrong?
+
+* 1. **install.packages(httr)**; 
+* 2. install.packages("httr"); 
+* 3. devtools::install_github("hadley/httr"); 
+* 4. in cmd prompt or in terminal, type in "R CMD INSTALL httr_1.0.0.tar.gz"
+
+Hint: The package name iin the install package command has to be in quote. 
+  
+After installing a package, you will have to load it to your environment in order to use it. Now use the library command to load the httr package.
+```{r, include = TRUE}
+library(httr)
+```
+
+Hint: Just type library(httr)
+  
+The command we will be using is GET. GET command has 3 required components: 1) a url where you send your command, in our case it is 'https://api.awhere.com/v1/weather'. Now assign this url to an object named url. "
+```{r, include = TRUE}
+url <- "https://api.awhere.com/v1/weather" 
+```
+
+Hint: Assign https://api.awhere.com/v1/weather in quote to url
+  
+
+The second component is your strquery string you have already created in step two.
+
+The third component is your authentication where you will give it your api_key and api_secret where you have already stored your API key and secret. Now pass your api_key and api_secret to authenticate command as two arguments. 
+```{r, include = TRUE}
+authenticate(api_key, api_secret)
+```
+
+Hint: Just type in authenticate(api_key, api_secret)
+  
+
+We know all three components we need to pass to GET command. They are url, strquery, and authenticate. Construct GET query with all three components. Note that strquery has to be passed to query. 
+```{r, include = TRUE}
+GET(url, query = strquery, authenticate(api_key, api_secret))
+```
+
+Hint: Just type in GET(url, query = strquery, authenticate(api_key, api_secret))
+
+Great job! Now you have finished your first API call. Now we want to get weather data out from the content of this API response. To do that, first we have to store the response to an object in R. Assign the result of the GET request to request
+```{r, include = TRUE}
+request <- GET(url, query = strquery, authenticate(api_key, api_secret))
+```
+
+Hint: Assign the command from the previous question to request using <-
+
+Now we are at the fourth step: format and export data. We will be using library jsonlite to convert our content. Which of the following command is a correct way to use this library?"
+
+* 1. install.package("jsonlite") then library(jsonlite); 
+* 2. install.packages(jsonlite) then require(jsonlite); 
+* 3. **install.packages("jsonlite") then library("jsonlite")**; 
+* 4. library(jsonlite)
+
+Hint: Be careful about the spelling and quotes. require is not a recommended way to load packages. 
+
+You can check ?content for more help. Passing a request class object to content with as argument as "text", you can get a json string. Type in content(request, as = "text") to see the data query result.
+```{r, include = TRUE}
+content(request, as = "text")
+```
+
+Hint: Type in content(request, as = "text")
+  
+
+Using fromJSON command from jsonlite package, we can decode the request content into a readable format. Try fromJSON with content(request, as = "text") and assign this result to data. 
+```{r, include = TRUE}
+data <- fromJSON(content(request, as = "text"))
+```
+
+Hint: Be careful about spelling, capital letters, and quote. 
+  
+
+type in data to see how the data look like
+```{r, include = TRUE}
+data
+```
+
+Hint: type in data  
+  
+
+To take data of the weather variables out, we can use R subsetting operators. Try data$dailyAttributes.
+```{r, include = TRUE}
+data$dailyAttributes
+```
+
+Hint: Type in data$dailyAttributes
+  
+You might have noticed that the weather variables in data all have a prefix "dailyAttributes" while the variables from data$dailyAttributes do not have that prefiix. This was because the aWhere weather data was stored in a nested json format. This nested json format does not compatible with 2 dimensional tabular data format. 
+  
+In order to turn the data output compatible with a tabular format (such as excel), we use data.frame command to "flatten" thhe dataset. Type in data_output <- data.frame(latitude = data$latitude, longitude = data$longitude, date = as.Date(data$date), data$dailyAttributes, stringsAsFactors=FALSE).
+```{r, include = TRUE}
+data_output <- data.frame(latitude = data$latitude, 
+                          longitude = data$longitude, 
+                          date = as.Date(data$date), 
+                          data$dailyAttributes, 
+                          stringsAsFactors=FALSE)
+```
+
+Hint: Just type in data_output <- data.frame(latitude = data$latitude, longitude = data$longitude, date = as.Date(data$date), data$dailyAttributes, stringsAsFactors=FALSE)
+  
+
+See how data_output looks like now!
+```{r, include = TRUE}
+data_output
+```
+
+Hint: Just type in data_output
+  
+Use ?write.csv, and figure out how to store data_output to a csv file named "weather-data.csv". 
+```{r, include = TRUE}
+write.csv(data_output, "./weather-data.csv")
+```
+
+Hint: Look and try the examples in the end of the help file. 
+
+Great job! Thank you for finishing this lesson. If you want to review what this lesson has covered quickly, you can download the "Basic Weather.html" from the same repository. Hope you find this lesson useful.
