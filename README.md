@@ -15,7 +15,7 @@ Step by step instructions to get aWhere weather data with the weather API.
 
 ## Install and run a course manually
 
-If the automatic course installation method outlined above does not work for you, then there's a simple alternative.
+Here's a simple way to install a swirl course.
 
 1) Click on the **Download ZIP** button on the righthand side of this page.
 
